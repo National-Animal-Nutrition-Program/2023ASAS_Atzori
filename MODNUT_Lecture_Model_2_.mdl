@@ -1,0 +1,310 @@
+{UTF-8}
+expected consumption of herd=
+	expected consumption per animal*Herd Population
+	~	Kg/Month
+	~		|
+
+month of year=
+	MODULO(Time, 12)
+	~	Month
+	~		|
+
+grazing consumption=
+	MIN((Pasture/TIME STEP-pasture senescence loss), expected consumption of herd)
+	~	Kg/Month
+	~		|
+
+relative pasture stress=
+	feed available per animal/expected consumption per animal
+	~	Month
+	~		|
+
+pasture regeneration=
+	Pasture*fractional growth rate of pasture*normalized precipitation
+	~	Kg/Month
+	~		|
+
+actual sales fraction=
+	(normal sales fraction/adjustment time for sales based on feed availability)*effect of feed availability on sales
+	~	1/Month
+	~	SMOOTH(effect of feed availability on sales*normal sales fraction, \
+		adjustment time for sales based on feed availability)
+	|
+
+Herd Population= INTEG (
+	animal births-animal deaths-animal sales,
+		initial herd size)
+	~	Animal
+	~		|
+
+fractional growth rate of pasture = WITH LOOKUP (
+	pasture per land area,
+		([(0,0)-(6000,0.4)],(0,0.375),(3000,0.095),(6000,0) ))
+	~	1/Month
+	~		|
+
+effect of feed availability on sales = WITH LOOKUP (
+	relative pasture stress,
+		([(0,0)-(18,5)],(0,5),(9,0.9),(18,0.05) ))
+	~	Dmnl
+	~		|
+
+pasture per land area=
+	Pasture/land area
+	~	Kg/Acre
+	~		|
+
+fractional senescence rate of pasture=
+	0.25
+	~	1/Month
+	~		|
+
+seasonal forage loss=
+	IF THEN ELSE (month of year<3 :OR: month of year>9, fractional senescence rate of pasture\
+		, 0)
+	~	1/Month [0,1]
+	~		|
+
+Pasture= INTEG (
+	pasture regeneration-grazing consumption-pasture senescence loss,
+		initial pasture level per area*land area)
+	~	Kg
+	~		|
+
+normalized precipitation=
+	1
+	~	1
+	~	1+STEP(-0.25, 24)+STEP(0.25, 48)
+		+STEP(-0.4, 24)+STEP(0.4, 48)
+	|
+
+initial pasture level per area=
+	1700
+	~	Kg/Acre
+	~		|
+
+feed available per animal=
+	Pasture/Herd Population
+	~	Kg/Animal
+	~		|
+
+pasture senescence loss=
+	Pasture*seasonal forage loss
+	~	Kg/Month
+	~	(Pasture-consumption*TIME STEP)*forage senescence rate
+	|
+
+initial herd size=
+	105
+	~	Animal
+	~		|
+
+mean animal lifetime=
+	120
+	~	Month
+	~		|
+
+birth fraction=
+	0.0625
+	~	1/Month
+	~		|
+
+animal births=
+	Herd Population*birth fraction
+	~	Animal/Month
+	~		|
+
+animal deaths=
+	Herd Population/mean animal lifetime
+	~	Animal/Month
+	~		|
+
+expected consumption per animal=
+	300
+	~	Kg/(Month*Animal)
+	~	RAMP function or STEP function for animal forage demand
+	|
+
+land area=
+	180
+	~	Acre
+	~		|
+
+normal sales fraction=
+	0.0541667
+	~	1/Month
+	~		|
+
+animal sales=
+	Herd Population*actual sales fraction
+	~	Animal/Month
+	~		|
+
+adjustment time for sales based on feed availability=
+	1
+	~	Month [1,24]
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 120
+	~	Month [1,600]
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,150,0
+10,1,Herd Population,376,159,51,29,3,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,2,48,147,144,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,1,4,0,0,22,0,0,0,-1--1--1,,1|(286,144)|
+1,4,5,2,100,0,0,22,0,0,0,-1--1--1,,1|(203,144)|
+11,5,48,241,144,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,animal births,241,166,40,11,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+12,7,48,628,146,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,8,10,7,4,0,0,22,0,0,0,-1--1--1,,1|(566,146)|
+1,9,10,1,100,0,0,22,0,0,0,-1--1--1,,1|(472,146)|
+11,10,48,523,146,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,11,animal sales,523,168,40,14,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,12,birth fraction,199,95,42,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,13,1,5,1,0,0,0,0,64,0,-1--1--1,,1|(303,121)|
+1,14,12,5,0,0,0,0,0,64,0,-1--1--1,,1|(219,118)|
+1,15,1,10,1,0,0,0,0,64,0,-1--1--1,,1|(451,122)|
+10,16,actual sales fraction,616,98,61,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,17,16,10,1,0,0,0,3,64,0,128-0-128,|12||0-0-0,1|(547,105)|
+10,18,effect of feed availability on sales,726,158,75,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,19,Pasture,299,365,50,29,3,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,20,48,504,360,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,21,23,20,4,0,0,22,0,0,0,-1--1--1,,1|(461,360)|
+1,22,23,19,100,0,0,22,0,0,0,-1--1--1,,1|(390,360)|
+11,23,48,438,360,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,24,grazing consumption,438,382,65,14,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,25,normal sales fraction,557,27,64,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,26,25,16,1,0,0,0,0,64,0,-1--1--1,,1|(585,63)|
+10,27,land area,35,264,31,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,28,48,102,363,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,29,31,19,4,0,0,22,0,0,0,-1--1--1,,1|(217,363)|
+1,30,31,28,100,0,0,22,0,0,0,-1--1--1,,1|(150,363)|
+11,31,48,180,363,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,32,pasture regeneration,180,389,40,19,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+1,33,19,31,1,0,0,0,0,64,0,-1--1--1,,1|(241,315)|
+12,34,48,295,489,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,35,37,34,4,0,0,22,0,0,0,-1--1--1,,1|(295,460)|
+1,36,37,19,100,0,0,22,0,0,0,-1--1--1,,1|(295,414)|
+11,37,48,295,441,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,38,pasture senescence loss,357,441,54,27,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,39,seasonal forage loss,511,461,62,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,40,19,38,1,0,0,0,0,64,0,-1--1--1,,1|(361,398)|
+10,41,mean animal lifetime,289,11,65,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,42,48,377,-11,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,43,44,42,4,0,0,22,0,0,0,-1--1--1,,1|(377,25)|
+11,44,48,377,52,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,45,animal deaths,422,52,37,21,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+1,46,1,45,1,0,0,0,0,64,0,-1--1--1,,1|(414,95)|
+1,47,41,44,0,0,0,0,0,64,0,-1--1--1,,1|(337,33)|
+1,48,19,24,1,0,0,0,0,64,0,-1--1--1,,1|(383,386)|
+1,49,39,38,0,0,0,0,0,64,0,-1--1--1,,1|(436,451)|
+10,50,expected consumption per animal,788,321,53,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,51,adjustment time for sales based on feed availability,716,29,61,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,52,0,1054,111,187,127,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+Herd Population,Graph
+12,53,0,1054,368,186,128,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+Pasture,Graph
+10,54,feed available per animal,436,268,55,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,55,1,54,1,0,0,0,3,64,0,128-0-128,|12||0-0-0,1|(388,229)|
+1,56,19,54,1,0,0,0,3,64,0,128-0-128,|12||0-0-0,1|(335,286)|
+10,57,fractional growth rate of pasture,88,314,54,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,58,57,31,1,0,0,0,3,128,0,255-128-0,|12||0-0-0,1|(128,343)|
+1,59,51,16,0,0,0,0,3,128,0,128-0-128,|12||0-0-0,1|(659,68)|
+10,60,FINAL TIME,88,10,53,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,61,initial herd size,188,48,49,14,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,62,61,1,0,0,0,0,0,128,1,-1--1--1,,1|(262,91)|
+10,63,initial pasture level per area,177,462,64,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,64,63,19,0,0,0,0,0,128,1,-1--1--1,,1|(231,418)|
+10,65,normalized precipitation,40,385,41,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,66,27,19,0,0,0,0,2,64,1,-1--1--1,|12||0-0-0,1|(150,307)|
+10,67,pasture per land area,184,262,64,14,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,68,19,67,1,0,0,0,3,128,0,255-128-0,|12||0-0-0,1|(261,287)|
+1,69,27,67,1,0,0,0,0,128,0,-1--1--1,,1|(97,254)|
+1,70,67,57,1,0,0,0,3,128,0,255-128-0,|12||0-0-0,1|(128,262)|
+10,71,Time,741,440,28,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,72,month of year,650,439,45,14,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,73,71,72,0,0,0,0,0,128,0,-1--1--1,,1|(710,439)|
+1,74,18,16,1,0,0,0,3,128,0,128-0-128,|12||0-0-0,1|(683,108)|
+1,75,44,1,100,0,0,22,0,0,0,-1--1--1,,1|(377,94)|
+1,76,72,39,0,0,0,0,0,128,0,-1--1--1,,1|(595,447)|
+10,77,fractional senescence rate of pasture,650,483,65,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,78,77,39,0,0,0,0,0,128,0,-1--1--1,,1|(585,473)|
+10,79,expected consumption of herd,584,325,64,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,80,1,79,1,0,0,0,3,128,0,0-128-0,|12||0-0-0,1|(487,234)|
+1,81,50,79,0,0,0,0,3,128,0,0-128-0,|12||0-0-0,1|(698,322)|
+10,82,relative pasture stress,707,245,49,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,83,54,82,1,0,0,0,3,128,0,128-0-128,|12||0-0-0,1|(593,267)|
+1,84,82,18,1,0,0,0,3,128,0,128-0-128,|12||0-0-0,1|(720,209)|
+1,85,65,32,0,0,0,0,0,128,0,-1--1--1,,1|(103,386)|
+1,86,79,24,1,0,0,0,3,128,0,0-128-0,|12||0-0-0,1|(535,370)|
+10,87,TIME STEP,568,400,49,14,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,88,87,24,0,0,0,0,3,128,0,0-128-0,|12||0-0-0,1|(517,393)|
+1,89,50,82,0,0,0,0,3,128,0,128-0-128,|12||0-0-0,1|(748,283)|
+1,90,38,24,1,0,0,0,3,64,0,0-128-0,|12||0-0-0,1|(429,426)|
+///---\\\
+:L<%^E!@
+1:/Users/aas/Desktop/Model_2_aas.vdfx
+1:Model_0.vdfx
+1:Model_1.vdfx
+1:Model_2.vdfx
+4:Time
+5:Herd Population
+9:Model_2_aas
+19:150,0
+24:0
+25:120
+26:120
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
